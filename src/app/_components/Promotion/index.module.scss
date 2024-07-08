@@ -1,26 +1,29 @@
 @use '../../_css/queries.scss' as *;
 
 .promotion {
-  display: grid;
-  grid-template-columns: 50% 1fr;
-  gap: 30px;
-  margin-bottom: 30px;
-
-  @include small-break {
-    grid-template-columns: 1fr;
-  }
+  margin-bottom: 50px;
 }
+// .promotion {
+//   display: grid;
+//   grid-template-columns: 50% 1fr;
+//   gap: 30px;
+//   margin-bottom: 30px;
+
+//   @include small-break {
+//     grid-template-columns: 1fr;
+//   }
+// }
+// .textBox {
+//   display: flex;
+//   flex-direction: column;
+//   justify-content: center;
+//   gap: 30px;
+// }
 
 .title {
   font-weight: 400;
 }
 
-.textBox {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 30px;
-}
 
 .image {
   min-height: 500px;

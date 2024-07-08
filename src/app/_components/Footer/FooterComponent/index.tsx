@@ -9,6 +9,7 @@ import { Footer, Media } from '../../../../payload/payload-types'
 import { inclusions, noHeaderFooterUrls, profileNavItems } from '../../../constants'
 import { Button } from '../../Button'
 import { Gutter } from '../../Gutter'
+import Promotion from '../../../_components/Promotion'
 
 import classes from './index.module.scss'
 
@@ -35,6 +36,7 @@ const FooterComponent = ({ footer }: { footer: Footer }) => {
             </li>
           ))}
         </ul>
+        <Promotion />
       </Gutter>
 
       <div className={classes.footer}>
