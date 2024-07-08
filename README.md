@@ -1,6 +1,6 @@
 # T-Shop (Tech-Shop)
-## Full Stack E-Commerce App with an Admin Dashboard & CMS in 2024 | Next 14, Stripe
-![e-commerce](https://i.ibb.co/Y3Hsth3/YT-Thumbnails-3.png)
+### Full Stack E-Commerce App with an Admin Dashboard & CMS in 2024 | Next 14, Stripe
+![e-commerce](https://github.com/developernajib/t-shop/assets/82390004/99d4c4a4-0efa-4990-a0a9-922f5a664c91)
 
 
 ## Production
