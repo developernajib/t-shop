@@ -6,6 +6,7 @@ import qs from 'qs'
 import { Category, Product } from '../../../payload/payload-types'
 import type { ArchiveBlockProps } from '../../_blocks/ArchiveBlock/types'
 import { useFilter } from '../../_providers/Filter'
+import { useDebounce } from '../../_utilities/useDebounce'
 import { Card } from '../Card'
 import { PageRange } from '../PageRange'
 import { Pagination } from '../Pagination'
@@ -36,7 +37,16 @@ export type Props = {
 }
 
 export const CollectionArchive: React.FC<Props> = props => {
-  const { categoryFilters, sort, priceRange, search } = useFilter()
+  const {
+    categoryFilters,
+    sort,
+    priceRange,
+    search,
+    setCategoryFilters,
+    setPriceRange,
+    setSearch,
+  } = useFilter()
+  const debouncedSearch = useDebounce(search, 300)
 
   const {
     className,
@@ -104,10 +114,10 @@ export const CollectionArchive: React.FC<Props> = props => {
                 },
               }
             : {}),
-          ...(search && search.trim().length > 0
+          ...(debouncedSearch && debouncedSearch.trim().length > 0
             ? {
                 title: {
-                  like: search.trim(),
+                  like: debouncedSearch.trim(),
                 },
               }
             : {}),
@@ -172,7 +182,7 @@ export const CollectionArchive: React.FC<Props> = props => {
     return () => {
       if (timer) clearTimeout(timer)
     }
-  }, [page, categoryFilters, relationTo, onResultChange, sort, limit, priceRange, search])
+  }, [page, categoryFilters, relationTo, onResultChange, sort, limit, priceRange, debouncedSearch])
 
   return (
     <div className={[classes.collectionArchive, className].filter(Boolean).join(' ')}>
@@ -195,6 +205,22 @@ export const CollectionArchive: React.FC<Props> = props => {
             return <Card key={index} relationTo="products" doc={result} showCategories />
           })}
         </div>
+
+        {!isLoading && (!results.docs || results.docs.length === 0) && (
+          <div className={classes.emptyState}>
+            <p>No products found matching your current filters.</p>
+            <button
+              type="button"
+              onClick={() => {
+                setCategoryFilters([])
+                setPriceRange({})
+                setSearch('')
+              }}
+            >
+              Clear all filters
+            </button>
+          </div>
+        )}
 
         {results.totalPages > 1 && (
           <Pagination
