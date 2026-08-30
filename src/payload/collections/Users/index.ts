@@ -111,6 +111,16 @@ const Users: CollectionConfig = {
               relationTo: 'products',
             },
             {
+              name: 'sku',
+              label: 'Variant SKU',
+              type: 'text',
+            },
+            {
+              name: 'variantTitle',
+              label: 'Variant Name',
+              type: 'text',
+            },
+            {
               name: 'quantity',
               type: 'number',
               min: 0,

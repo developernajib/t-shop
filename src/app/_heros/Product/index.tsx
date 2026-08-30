@@ -94,6 +94,8 @@ export const ProductHero: React.FC<{
 
         <AddToCartButton
           product={product}
+          sku={currentVariant?.sku}
+          variantTitle={currentVariant?.title}
           className={classes.addToCartButton}
           appearance={isAvailable ? 'primary' : 'secondary'}
         />

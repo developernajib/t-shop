@@ -10,32 +10,32 @@ import { RemoveFromCartButton } from '../../../_components/RemoveFromCartButton'
 
 import classes from './index.module.scss'
 
-const CartItem = ({ product, title, metaImage, qty, addItemToCart }) => {
+const CartItem = ({ product, title, metaImage, qty, addItemToCart, sku, variantTitle }) => {
   const [quantity, setQuantity] = useState(qty)
 
   const decrementQty = () => {
     const updatedQty = quantity > 1 ? quantity - 1 : 1
 
     setQuantity(updatedQty)
-    addItemToCart({ product, quantity: Number(updatedQty) })
+    addItemToCart({ product, quantity: Number(updatedQty), sku, variantTitle })
   }
 
   const incrementQty = () => {
     const updatedQty = quantity + 1
 
     setQuantity(updatedQty)
-    addItemToCart({ product, quantity: Number(updatedQty) })
+    addItemToCart({ product, quantity: Number(updatedQty), sku, variantTitle })
   }
 
   const enterQty = (e: React.ChangeEvent<HTMLInputElement>) => {
     const updatedQty = Number(e.target.value)
 
     setQuantity(updatedQty)
-    addItemToCart({ product, quantity: Number(updatedQty) })
+    addItemToCart({ product, quantity: Number(updatedQty), sku, variantTitle })
   }
 
   return (
-    <li className={classes.item} key={title}>
+    <li className={classes.item} key={sku ? `${title}-${sku}` : title}>
       <Link href={`/products/${product.slug}`} className={classes.mediaWrapper}>
         {!metaImage && <span>No image</span>}
         {metaImage && typeof metaImage !== 'string' && (
@@ -46,6 +46,11 @@ const CartItem = ({ product, title, metaImage, qty, addItemToCart }) => {
       <div className={classes.itemDetails}>
         <div className={classes.titleWrapper}>
           <h6>{title}</h6>
+          {variantTitle && (
+            <p style={{ fontSize: '13px', color: 'var(--color-dark-500)', marginTop: '2px' }}>
+              Option: {variantTitle}
+            </p>
+          )}
           <Price product={product} button={false} />
         </div>
 
@@ -81,7 +86,7 @@ const CartItem = ({ product, title, metaImage, qty, addItemToCart }) => {
 
       <div className={classes.subtotalWrapper}>
         <Price product={product} button={false} quantity={quantity} />
-        <RemoveFromCartButton product={product} />
+        <RemoveFromCartButton product={product} sku={sku} />
       </div>
     </li>
   )

@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation'
 import { Settings } from '../../../../payload/payload-types'
 import { Button } from '../../../_components/Button'
 import { LoadingShimmer } from '../../../_components/LoadingShimmer'
+import { priceFromJSON } from '../../../_components/Price'
 import { useAuth } from '../../../_providers/Auth'
 import { useCart } from '../../../_providers/Cart'
 import { useTheme } from '../../../_providers/Theme'
@@ -46,12 +47,14 @@ export const CheckoutPage: React.FC<{
         body: JSON.stringify({
           total: cartTotal.raw,
           stripePaymentIntentID: `test_mock_${Date.now()}`,
-          items: (cart?.items || [])?.map(({ product, quantity }) => ({
+          items: (cart?.items || [])?.map(({ product, quantity, sku, variantTitle }: any) => ({
             product: typeof product === 'string' ? product : product.id,
             quantity,
+            sku,
+            variantTitle,
             price:
               typeof product === 'object'
-                ? priceFromJSON(product.priceJSON, 1, true)
+                ? Number(priceFromJSON(product.priceJSON, 1, true))
                 : undefined,
           })),
         }),
@@ -159,6 +162,8 @@ export const CheckoutPage: React.FC<{
                       metaImage={metaImage}
                       quantity={quantity}
                       index={index}
+                      sku={(item as any)?.sku}
+                      variantTitle={(item as any)?.variantTitle}
                     />
                   </Fragment>
                 )

@@ -15,12 +15,12 @@ import { useAuth } from '../Auth'
 import { CartItem, cartReducer } from './reducer'
 
 export type CartContext = {
-  cart: User['cart']
+  cart: { items?: CartItem[] }
   addItemToCart: (item: CartItem) => void
-  deleteItemFromCart: (product: Product) => void
+  deleteItemFromCart: (item: { product: Product; sku?: string } | Product) => void
   cartIsEmpty: boolean | undefined
   clearCart: () => void
-  isProductInCart: (product: Product) => boolean
+  isProductInCart: (product: Product, sku?: string) => boolean
   cartTotal: {
     formatted: string
     raw: number
@@ -195,16 +195,21 @@ export const CartProvider = props => {
   }, [user, cart])
 
   const isProductInCart = useCallback(
-    (incomingProduct: Product): boolean => {
+    (incomingProduct: Product, sku?: string): boolean => {
       let isInCart = false
       const { items: itemsInCart } = cart || {}
       if (Array.isArray(itemsInCart) && itemsInCart.length > 0) {
         isInCart = Boolean(
-          itemsInCart.find(({ product }) =>
-            typeof product === 'string'
-              ? product === incomingProduct.id
-              : product?.id === incomingProduct.id,
-          ), // eslint-disable-line function-paren-newline
+          itemsInCart.find(item => {
+            const itemProductId =
+              typeof item.product === 'string' ? item.product : item?.product?.id
+            const matchProduct = itemProductId === incomingProduct.id
+            if (!matchProduct) return false
+            if (sku !== undefined) {
+              return (item as any)?.sku === sku
+            }
+            return true
+          }),
         )
       }
       return isInCart

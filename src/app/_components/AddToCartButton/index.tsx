@@ -14,8 +14,10 @@ export const AddToCartButton: React.FC<{
   quantity?: number
   className?: string
   appearance?: Props['appearance']
+  sku?: string
+  variantTitle?: string
 }> = props => {
-  const { product, quantity = 1, className, appearance = 'primary' } = props
+  const { product, quantity = 1, className, appearance = 'primary', sku, variantTitle } = props
 
   const { cart, addItemToCart, isProductInCart, hasInitializedCart } = useCart()
 
@@ -23,8 +25,8 @@ export const AddToCartButton: React.FC<{
   const router = useRouter()
 
   useEffect(() => {
-    setIsInCart(isProductInCart(product))
-  }, [isProductInCart, product, cart])
+    setIsInCart(isProductInCart(product, sku))
+  }, [isProductInCart, product, cart, sku])
 
   return (
     <Button
@@ -47,7 +49,9 @@ export const AddToCartButton: React.FC<{
               addItemToCart({
                 product,
                 quantity,
-              })
+                sku,
+                variantTitle,
+              } as any)
 
               router.push('/cart')
             }

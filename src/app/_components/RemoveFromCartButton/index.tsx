@@ -9,12 +9,13 @@ import classes from './index.module.scss'
 export const RemoveFromCartButton: React.FC<{
   className?: string
   product: Product
+  sku?: string
 }> = props => {
-  const { className, product } = props
+  const { className, product, sku } = props
 
   const { deleteItemFromCart, isProductInCart } = useCart()
 
-  const productIsInCart = isProductInCart(product)
+  const productIsInCart = isProductInCart(product, sku)
 
   if (!productIsInCart) {
     return <div>Item is not in the cart</div>
@@ -24,7 +25,7 @@ export const RemoveFromCartButton: React.FC<{
     <button
       type="button"
       onClick={() => {
-        deleteItemFromCart(product)
+        deleteItemFromCart({ product, sku })
       }}
       className={[className, classes.removeFromCartButton].filter(Boolean).join(' ')}
     >
