@@ -13,6 +13,11 @@ import classes from './index.module.scss'
 const CartItem = ({ product, title, metaImage, qty, addItemToCart, sku, variantTitle }) => {
   const [quantity, setQuantity] = useState(qty)
 
+  const variantObj = (product as any)?.enableVariants
+    ? (product as any)?.variants?.find((v: any) => v.sku === sku)
+    : null
+  const maxStock = variantObj ? (variantObj.stock ?? 0) : ((product as any)?.stock ?? 999)
+
   const decrementQty = () => {
     const updatedQty = quantity > 1 ? quantity - 1 : 1
 
@@ -21,6 +26,7 @@ const CartItem = ({ product, title, metaImage, qty, addItemToCart, sku, variantT
   }
 
   const incrementQty = () => {
+    if (quantity >= maxStock) return
     const updatedQty = quantity + 1
 
     setQuantity(updatedQty)
@@ -28,7 +34,9 @@ const CartItem = ({ product, title, metaImage, qty, addItemToCart, sku, variantT
   }
 
   const enterQty = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const updatedQty = Number(e.target.value)
+    let updatedQty = Number(e.target.value)
+    if (isNaN(updatedQty) || updatedQty < 1) updatedQty = 1
+    if (updatedQty > maxStock) updatedQty = maxStock
 
     setQuantity(updatedQty)
     addItemToCart({ product, quantity: Number(updatedQty), sku, variantTitle })
@@ -49,6 +57,11 @@ const CartItem = ({ product, title, metaImage, qty, addItemToCart, sku, variantT
           {variantTitle && (
             <p style={{ fontSize: '13px', color: 'var(--color-dark-500)', marginTop: '2px' }}>
               Option: {variantTitle}
+            </p>
+          )}
+          {maxStock < 10 && (
+            <p style={{ fontSize: '12px', color: maxStock > 0 ? 'var(--color-warning-500, #e67e22)' : 'var(--color-error-500)', marginTop: '2px' }}>
+              {maxStock > 0 ? `Only ${maxStock} left in stock` : 'Out of stock'}
             </p>
           )}
           <Price product={product} button={false} />
@@ -72,7 +85,13 @@ const CartItem = ({ product, title, metaImage, qty, addItemToCart, sku, variantT
             onChange={enterQty}
           />
 
-          <div className={classes.quantityBtn} onClick={incrementQty}>
+          <div
+            className={[classes.quantityBtn, quantity >= maxStock && classes.disabled]
+              .filter(Boolean)
+              .join(' ')}
+            onClick={incrementQty}
+            style={{ opacity: quantity >= maxStock ? 0.3 : 1, cursor: quantity >= maxStock ? 'not-allowed' : 'pointer' }}
+          >
             <Image
               src="/assets/icons/plus.svg"
               alt="plus"

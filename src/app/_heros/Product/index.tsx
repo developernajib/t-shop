@@ -98,6 +98,7 @@ export const ProductHero: React.FC<{
           variantTitle={currentVariant?.title}
           className={classes.addToCartButton}
           appearance={isAvailable ? 'primary' : 'secondary'}
+          disabled={!isAvailable}
         />
       </div>
     </Gutter>

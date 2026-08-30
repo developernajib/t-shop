@@ -16,8 +16,17 @@ export const AddToCartButton: React.FC<{
   appearance?: Props['appearance']
   sku?: string
   variantTitle?: string
+  disabled?: boolean
 }> = props => {
-  const { product, quantity = 1, className, appearance = 'primary', sku, variantTitle } = props
+  const {
+    product,
+    quantity = 1,
+    className,
+    appearance = 'primary',
+    sku,
+    variantTitle,
+    disabled = false,
+  } = props
 
   const { cart, addItemToCart, isProductInCart, hasInitializedCart } = useCart()
 
@@ -32,9 +41,10 @@ export const AddToCartButton: React.FC<{
     <Button
       href={isInCart ? '/cart' : undefined}
       type={!isInCart ? 'button' : undefined}
-      label={isInCart ? `✓ View in cart` : `Add to cart`}
+      label={disabled ? 'Out of stock' : isInCart ? `✓ View in cart` : `Add to cart`}
       el={isInCart ? 'link' : undefined}
       appearance={appearance}
+      disabled={disabled}
       className={[
         className,
         classes.addToCartButton,
@@ -44,7 +54,7 @@ export const AddToCartButton: React.FC<{
         .filter(Boolean)
         .join(' ')}
       onClick={
-        !isInCart
+        !isInCart && !disabled
           ? () => {
               addItemToCart({
                 product,
