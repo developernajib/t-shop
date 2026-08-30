@@ -36,7 +36,7 @@ export type Props = {
 }
 
 export const CollectionArchive: React.FC<Props> = props => {
-  const { categoryFilters, sort } = useFilter()
+  const { categoryFilters, sort, priceRange } = useFilter()
 
   const {
     className,
@@ -121,13 +121,36 @@ export const CollectionArchive: React.FC<Props> = props => {
         clearTimeout(timer)
         hasHydrated.current = true
 
-        const { docs } = json as { docs: Product[] }
+        let { docs } = json as { docs: Product[] }
 
         if (docs && Array.isArray(docs)) {
-          setResults(json)
+          if (priceRange.min !== undefined || priceRange.max !== undefined) {
+            docs = docs.filter(doc => {
+              try {
+                const parsed = JSON.parse(doc.priceJSON || '{}')?.data?.[0]
+                const amount = parsed?.unit_amount
+                if (typeof amount !== 'number') return true
+                if (priceRange.min !== undefined && amount < priceRange.min) return false
+                if (priceRange.max !== undefined && amount > priceRange.max) return false
+                return true
+              } catch {
+                return true
+              }
+            })
+          }
+
+          setResults({
+            ...json,
+            docs,
+            totalDocs: docs.length,
+          })
           setIsLoading(false)
           if (typeof onResultChange === 'function') {
-            onResultChange(json)
+            onResultChange({
+              ...json,
+              docs,
+              totalDocs: docs.length,
+            })
           }
         }
       } catch (err) {
@@ -142,7 +165,7 @@ export const CollectionArchive: React.FC<Props> = props => {
     return () => {
       if (timer) clearTimeout(timer)
     }
-  }, [page, categoryFilters, relationTo, onResultChange, sort, limit])
+  }, [page, categoryFilters, relationTo, onResultChange, sort, limit, priceRange])
 
   return (
     <div className={[classes.collectionArchive, className].filter(Boolean).join(' ')}>
