@@ -49,6 +49,54 @@
   color: var(--color-green-500);
 }
 
+.outOfStock {
+  color: var(--color-error-500);
+}
+
+.variantsSection {
+  margin: 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  label {
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .variantList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .variantBtn {
+    padding: 8px 16px;
+    border: 1px solid var(--color-dark-200);
+    background: transparent;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      border-color: var(--color-dark-500);
+    }
+
+    &.selected {
+      border-color: var(--color-dark-1000);
+      background-color: var(--color-dark-50);
+      font-weight: 600;
+    }
+
+    &.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      text-decoration: line-through;
+    }
+  }
+}
+
 .separator {
   color: var(--color-gray-500);
   padding: 0 10px;

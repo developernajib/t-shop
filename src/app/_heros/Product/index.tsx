@@ -1,4 +1,6 @@
-import React, { Fragment } from 'react'
+'use client'
+
+import React, { Fragment, useState } from 'react'
 
 import { Category, Product } from '../../../payload/payload-types'
 import { AddToCartButton } from '../../_components/AddToCartButton'
@@ -12,6 +14,16 @@ export const ProductHero: React.FC<{
   product: Product
 }> = ({ product }) => {
   const { title, categories, meta: { image: metaImage, description } = {} } = product
+
+  const hasVariants = (product as any)?.enableVariants && (product as any)?.variants?.length > 0
+  const variants = (product as any)?.variants || []
+  const [selectedVariantIndex, setSelectedVariantIndex] = useState<number>(0)
+
+  const currentVariant = hasVariants ? variants[selectedVariantIndex] : null
+  const currentStock = hasVariants
+    ? currentVariant?.stock ?? 0
+    : ((product as any)?.stock ?? 10)
+  const isAvailable = currentStock > 0
 
   return (
     <Gutter className={classes.productHero}>
@@ -41,8 +53,37 @@ export const ProductHero: React.FC<{
               )
             })}
           </div>
-          <p className={classes.stock}> In stock</p>
+          <p className={isAvailable ? classes.stock : classes.outOfStock}>
+            {isAvailable ? `In stock (${currentStock})` : 'Out of stock'}
+          </p>
         </div>
+
+        {hasVariants && (
+          <div className={classes.variantsSection}>
+            <label>Select Option:</label>
+            <div className={classes.variantList}>
+              {variants.map((v: any, idx: number) => {
+                const outOfStock = (v.stock ?? 0) <= 0
+                return (
+                  <button
+                    key={v.sku || idx}
+                    type="button"
+                    className={[
+                      classes.variantBtn,
+                      selectedVariantIndex === idx && classes.selected,
+                      outOfStock && classes.disabled,
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                    onClick={() => setSelectedVariantIndex(idx)}
+                  >
+                    {v.title || v.sku}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         <Price product={product} button={false} />
 
@@ -51,7 +92,11 @@ export const ProductHero: React.FC<{
           <p>{description}</p>
         </div>
 
-        <AddToCartButton product={product} className={classes.addToCartButton} />
+        <AddToCartButton
+          product={product}
+          className={classes.addToCartButton}
+          appearance={isAvailable ? 'primary' : 'secondary'}
+        />
       </div>
     </Gutter>
   )
