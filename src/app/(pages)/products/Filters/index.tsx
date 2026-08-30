@@ -11,8 +11,16 @@ import { useFilter } from '../../../_providers/Filter'
 import classes from './index.module.scss'
 
 const Filters = ({ categories }: { categories: Category[] }) => {
-  const { categoryFilters, sort, priceRange, setCategoryFilters, setSort, setPriceRange } =
-    useFilter()
+  const {
+    categoryFilters,
+    sort,
+    priceRange,
+    search,
+    setCategoryFilters,
+    setSort,
+    setPriceRange,
+    setSearch,
+  } = useFilter()
 
   const handleCategories = (categoryId: string) => {
     if (categoryFilters.includes(categoryId)) {
@@ -37,6 +45,25 @@ const Filters = ({ categories }: { categories: Category[] }) => {
   return (
     <div className={classes.filters}>
       <div>
+        <h6 className={classes.title}>Search</h6>
+        <div style={{ marginTop: '12px' }}>
+          <input
+            type="text"
+            placeholder="Search products..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '10px 14px',
+              borderRadius: '4px',
+              border: '1px solid var(--color-dark-100, #e2e8f0)',
+              backgroundColor: 'var(--color-base-0, #ffffff)',
+              color: 'inherit',
+              fontSize: '14px',
+            }}
+          />
+        </div>
+        <HR className={classes.hr} />
         <h6 className={classes.title}>Product Categories</h6>
         <div className={classes.categories}>
           {categories.map(category => {

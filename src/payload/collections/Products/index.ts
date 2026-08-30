@@ -102,6 +102,15 @@ const Products: CollectionConfig = {
               },
             },
             {
+              name: 'price',
+              label: 'Base Price (in cents/VND)',
+              type: 'number',
+              min: 0,
+              admin: {
+                description: 'Product price in cents for filtering and sorting',
+              },
+            },
+            {
               name: 'enableVariants',
               label: 'Enable Variants',
               type: 'checkbox',

@@ -47,6 +47,9 @@ export const beforeProductChange: BeforeChangeHook = async ({ req, data }) => {
     })
 
     newDoc.priceJSON = JSON.stringify(allPrices)
+    if (allPrices?.data?.[0]?.unit_amount) {
+      newDoc.price = allPrices.data[0].unit_amount
+    }
   } catch (error: unknown) {
     payload.logger.error(`Error fetching prices from Stripe: ${error}`)
   }

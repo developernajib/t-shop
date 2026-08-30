@@ -9,6 +9,8 @@
 export type CartItems =
   | {
       product?: (string | null) | Product;
+      sku?: string | null;
+      variantTitle?: string | null;
       quantity?: number | null;
       id?: string | null;
     }[]
@@ -289,6 +291,20 @@ export interface Product {
     | null;
   stripeProductID?: string | null;
   priceJSON?: string | null;
+  price?: number | null;
+  enableVariants?: boolean | null;
+  stock?: number | null;
+  variants?:
+    | {
+        sku: string;
+        title: string;
+        size?: ('s' | 'm' | 'l' | 'xl') | null;
+        color?: string | null;
+        price?: number | null;
+        stock?: number | null;
+        id?: string | null;
+      }[]
+    | null;
   enablePaywall?: boolean | null;
   paywall?:
     | (
@@ -402,6 +418,8 @@ export interface Order {
   items?:
     | {
         product: string | Product;
+        sku?: string | null;
+        variantTitle?: string | null;
         price?: number | null;
         quantity?: number | null;
         id?: string | null;
@@ -505,7 +523,7 @@ export interface Header {
 }
 export interface Footer {
   id: string;
-  copyright: string;
+  copyright?: string | null;
   navItems?:
     | {
         link: {
