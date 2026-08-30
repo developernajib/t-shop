@@ -197,6 +197,7 @@ export interface Category {
 export interface Product {
   id: string;
   title: string;
+  price?: number | null;
   publishedOn?: string | null;
   layout?:
     | (
@@ -291,7 +292,6 @@ export interface Product {
     | null;
   stripeProductID?: string | null;
   priceJSON?: string | null;
-  price?: number | null;
   enableVariants?: boolean | null;
   stock?: number | null;
   variants?:

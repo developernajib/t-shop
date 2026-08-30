@@ -10,6 +10,7 @@ import { populateArchiveBlock } from '../../hooks/populateArchiveBlock'
 import { checkUserPurchases } from './access/checkUserPurchases'
 import { beforeProductChange } from './hooks/beforeChange'
 import { deleteProductFromCarts } from './hooks/deleteProductFromCarts'
+import { populatePrice } from './hooks/populatePrice'
 import { revalidateProduct } from './hooks/revalidateProduct'
 import { ProductSelect } from './ui/ProductSelect'
 
@@ -44,6 +45,18 @@ const Products: CollectionConfig = {
       name: 'title',
       type: 'text',
       required: true,
+    },
+    {
+      name: 'price',
+      label: 'Base Price (in cents/VND)',
+      type: 'number',
+      min: 0,
+      hooks: {
+        beforeChange: [populatePrice],
+      },
+      admin: {
+        description: 'Product price in cents for filtering and sorting',
+      },
     },
     {
       name: 'publishedOn',
@@ -99,15 +112,6 @@ const Products: CollectionConfig = {
                 readOnly: true,
                 hidden: true,
                 rows: 10,
-              },
-            },
-            {
-              name: 'price',
-              label: 'Base Price (in cents/VND)',
-              type: 'number',
-              min: 0,
-              admin: {
-                description: 'Product price in cents for filtering and sorting',
               },
             },
             {

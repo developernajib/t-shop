@@ -144,8 +144,11 @@ export const CollectionArchive: React.FC<Props> = props => {
           if (priceRange.min !== undefined || priceRange.max !== undefined) {
             docs = docs.filter(doc => {
               try {
-                const parsed = JSON.parse(doc.priceJSON || '{}')?.data?.[0]
-                const amount = parsed?.unit_amount
+                let amount = (doc as any)?.price
+                if (typeof amount !== 'number') {
+                  const parsed = JSON.parse(doc.priceJSON || '{}')?.data?.[0]
+                  amount = parsed?.unit_amount
+                }
                 if (typeof amount !== 'number') return true
                 if (priceRange.min !== undefined && amount < priceRange.min) return false
                 if (priceRange.max !== undefined && amount > priceRange.max) return false
@@ -184,11 +187,72 @@ export const CollectionArchive: React.FC<Props> = props => {
     }
   }, [page, categoryFilters, relationTo, onResultChange, sort, limit, priceRange, debouncedSearch])
 
+  const hasActiveFilters =
+    categoryFilters.length > 0 ||
+    priceRange.min !== undefined ||
+    priceRange.max !== undefined ||
+    (search && search.trim().length > 0)
+
+  const getPriceLabel = () => {
+    if (priceRange.min === 5000 && !priceRange.max) return 'Over $50'
+    if (priceRange.max === 3000 && !priceRange.min) return 'Under $30'
+    if (priceRange.min === 3000 && priceRange.max === 5000) return '$30 - $50'
+    return 'Price filter'
+  }
+
   return (
     <div className={[classes.collectionArchive, className].filter(Boolean).join(' ')}>
       <div ref={scrollRef} className={classes.scrollRef} />
       {!isLoading && error && <div>{error}</div>}
       <Fragment>
+        {hasActiveFilters && (
+          <div className={classes.activeFilters}>
+            <span className={classes.activeFiltersLabel}>Active:</span>
+            {search && search.trim().length > 0 && (
+              <span className={classes.badge}>
+                "{search}"
+                <button type="button" onClick={() => setSearch('')}>
+                  &times;
+                </button>
+              </span>
+            )}
+            {(priceRange.min !== undefined || priceRange.max !== undefined) && (
+              <span className={classes.badge}>
+                {getPriceLabel()}
+                <button type="button" onClick={() => setPriceRange({})}>
+                  &times;
+                </button>
+              </span>
+            )}
+            {categoryFilters.map(catId => {
+              const matchedCat = categories?.find(c => (typeof c === 'object' ? c.id === catId : c === catId))
+              const catTitle = typeof matchedCat === 'object' ? matchedCat.title : catId
+              return (
+                <span key={catId} className={classes.badge}>
+                  {catTitle}
+                  <button
+                    type="button"
+                    onClick={() => setCategoryFilters(categoryFilters.filter(id => id !== catId))}
+                  >
+                    &times;
+                  </button>
+                </span>
+              )
+            })}
+            <button
+              type="button"
+              className={classes.clearAllTextBtn}
+              onClick={() => {
+                setCategoryFilters([])
+                setPriceRange({})
+                setSearch('')
+              }}
+            >
+              Clear all
+            </button>
+          </div>
+        )}
+
         {showPageRange !== false && (
           <div className={classes.pageRange}>
             <PageRange
