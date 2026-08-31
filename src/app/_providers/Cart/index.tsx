@@ -15,12 +15,12 @@ import { useAuth } from '../Auth'
 import { CartItem, cartReducer } from './reducer'
 
 export type CartContext = {
-  cart: User['cart']
+  cart: { items?: CartItem[] }
   addItemToCart: (item: CartItem) => void
-  deleteItemFromCart: (product: Product) => void
+  deleteItemFromCart: (item: { product: Product; sku?: string } | Product) => void
   cartIsEmpty: boolean | undefined
   clearCart: () => void
-  isProductInCart: (product: Product) => boolean
+  isProductInCart: (product: Product, sku?: string) => boolean
   cartTotal: {
     formatted: string
     raw: number
@@ -40,7 +40,7 @@ const arrayHasItems = array => Array.isArray(array) && array.length > 0
  */
 const flattenCart = (cart: User['cart']): User['cart'] => ({
   ...cart,
-  items: cart.items
+  items: (cart?.items || [])
     .map(item => {
       if (!item?.product || typeof item?.product !== 'object') {
         return null
@@ -51,6 +51,8 @@ const flattenCart = (cart: User['cart']): User['cart'] => ({
         // flatten relationship to product
         product: item?.product?.id,
         quantity: typeof item?.quantity === 'number' ? item?.quantity : 0,
+        sku: (item as any)?.sku || undefined,
+        variantTitle: (item as any)?.variantTitle || undefined,
       }
     })
     .filter(Boolean) as CartItem[],
@@ -96,7 +98,7 @@ export const CartProvider = props => {
 
         if (parsedCart?.items && parsedCart?.items?.length > 0) {
           const initialCart = await Promise.all(
-            parsedCart.items.map(async ({ product, quantity }) => {
+            parsedCart.items.map(async ({ product, quantity, sku, variantTitle }) => {
               const res = await fetch(
                 `${process.env.NEXT_PUBLIC_SERVER_URL}/api/products/${product}`,
               )
@@ -104,6 +106,8 @@ export const CartProvider = props => {
               return {
                 product: data,
                 quantity,
+                sku,
+                variantTitle,
               }
             }),
           )
@@ -195,16 +199,21 @@ export const CartProvider = props => {
   }, [user, cart])
 
   const isProductInCart = useCallback(
-    (incomingProduct: Product): boolean => {
+    (incomingProduct: Product, sku?: string): boolean => {
       let isInCart = false
       const { items: itemsInCart } = cart || {}
       if (Array.isArray(itemsInCart) && itemsInCart.length > 0) {
         isInCart = Boolean(
-          itemsInCart.find(({ product }) =>
-            typeof product === 'string'
-              ? product === incomingProduct.id
-              : product?.id === incomingProduct.id,
-          ), // eslint-disable-line function-paren-newline
+          itemsInCart.find(item => {
+            const itemProductId =
+              typeof item.product === 'string' ? item.product : item?.product?.id
+            const matchProduct = itemProductId === incomingProduct.id
+            if (!matchProduct) return false
+            if (sku !== undefined) {
+              return (item as any)?.sku === sku
+            }
+            return true
+          }),
         )
       }
       return isInCart
@@ -239,13 +248,36 @@ export const CartProvider = props => {
 
     const newTotal =
       cart?.items?.reduce((acc, item) => {
-        return (
-          acc +
-          (typeof item.product === 'object'
-            ? JSON.parse(item?.product?.priceJSON || '{}')?.data?.[0]?.unit_amount *
-              (typeof item?.quantity === 'number' ? item?.quantity : 0)
-            : 0)
-        )
+        if (typeof item.product !== 'object' || !item.product) return acc
+        const qty = typeof item?.quantity === 'number' ? item?.quantity : 0
+        const itemSku = (item as any)?.sku
+
+        let itemPrice = 0
+        if (
+          (item.product as any)?.enableVariants &&
+          Array.isArray((item.product as any)?.variants) &&
+          itemSku
+        ) {
+          const variant = (item.product as any).variants.find((v: any) => v.sku === itemSku)
+          if (typeof variant?.price === 'number') {
+            itemPrice = variant.price
+          }
+        }
+
+        if (!itemPrice) {
+          if (typeof (item.product as any)?.price === 'number') {
+            itemPrice = (item.product as any).price
+          } else {
+            try {
+              const parsed = JSON.parse(item?.product?.priceJSON || '{}')
+              itemPrice = parsed?.data?.[0]?.unit_amount || 0
+            } catch {
+              itemPrice = 0
+            }
+          }
+        }
+
+        return acc + itemPrice * qty
       }, 0) || 0
 
     setTotal({

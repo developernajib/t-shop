@@ -10,6 +10,7 @@ import { populateArchiveBlock } from '../../hooks/populateArchiveBlock'
 import { checkUserPurchases } from './access/checkUserPurchases'
 import { beforeProductChange } from './hooks/beforeChange'
 import { deleteProductFromCarts } from './hooks/deleteProductFromCarts'
+import { populatePrice } from './hooks/populatePrice'
 import { revalidateProduct } from './hooks/revalidateProduct'
 import { ProductSelect } from './ui/ProductSelect'
 
@@ -44,6 +45,18 @@ const Products: CollectionConfig = {
       name: 'title',
       type: 'text',
       required: true,
+    },
+    {
+      name: 'price',
+      label: 'Base Price (in cents/VND)',
+      type: 'number',
+      min: 0,
+      hooks: {
+        beforeChange: [populatePrice],
+      },
+      admin: {
+        description: 'Product price in cents for filtering and sorting',
+      },
     },
     {
       name: 'publishedOn',
@@ -100,6 +113,73 @@ const Products: CollectionConfig = {
                 hidden: true,
                 rows: 10,
               },
+            },
+            {
+              name: 'enableVariants',
+              label: 'Enable Variants',
+              type: 'checkbox',
+              defaultValue: false,
+            },
+            {
+              name: 'stock',
+              label: 'Stock Quantity (Default)',
+              type: 'number',
+              defaultValue: 10,
+              min: 0,
+              admin: {
+                condition: (data, siblingData) => !siblingData?.enableVariants,
+              },
+            },
+            {
+              name: 'variants',
+              label: 'Product Variants',
+              type: 'array',
+              admin: {
+                condition: (data, siblingData) => Boolean(siblingData?.enableVariants),
+              },
+              fields: [
+                {
+                  name: 'sku',
+                  label: 'SKU',
+                  type: 'text',
+                  required: true,
+                },
+                {
+                  name: 'title',
+                  label: 'Variant Name (e.g. Size M / Black)',
+                  type: 'text',
+                  required: true,
+                },
+                {
+                  name: 'size',
+                  label: 'Size',
+                  type: 'select',
+                  options: [
+                    { label: 'S', value: 's' },
+                    { label: 'M', value: 'm' },
+                    { label: 'L', value: 'l' },
+                    { label: 'XL', value: 'xl' },
+                  ],
+                },
+                {
+                  name: 'color',
+                  label: 'Color',
+                  type: 'text',
+                },
+                {
+                  name: 'price',
+                  label: 'Price in Cents / VND (Optional Override)',
+                  type: 'number',
+                  min: 0,
+                },
+                {
+                  name: 'stock',
+                  label: 'Stock Quantity',
+                  type: 'number',
+                  defaultValue: 10,
+                  min: 0,
+                },
+              ],
             },
             {
               name: 'enablePaywall',

@@ -104,8 +104,31 @@ export default async function Order({ params: { id } }) {
                         {title}
                       </Link>
                     </h6>
+                    {(item as any)?.variantTitle && (
+                      <p
+                        style={{
+                          fontSize: '14px',
+                          color: 'var(--color-dark-500)',
+                          marginTop: '-4px',
+                          marginBottom: '8px',
+                        }}
+                      >
+                        Option: {(item as any)?.variantTitle}{' '}
+                        {(item as any)?.sku ? `(${(item as any)?.sku})` : ''}
+                      </p>
+                    )}
                     <p>{`Quantity: ${quantity}`}</p>
-                    <Price product={product} button={false} quantity={quantity} />
+                    {(item as any)?.price ? (
+                      <p>{`Price: ${(((item as any).price * quantity) / 100).toLocaleString(
+                        'en-US',
+                        {
+                          style: 'currency',
+                          currency: 'USD',
+                        },
+                      )}`}</p>
+                    ) : (
+                      <Price product={product} button={false} quantity={quantity} />
+                    )}
                   </div>
                 </div>
               </Fragment>

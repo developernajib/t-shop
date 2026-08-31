@@ -14,8 +14,19 @@ export const AddToCartButton: React.FC<{
   quantity?: number
   className?: string
   appearance?: Props['appearance']
+  sku?: string
+  variantTitle?: string
+  disabled?: boolean
 }> = props => {
-  const { product, quantity = 1, className, appearance = 'primary' } = props
+  const {
+    product,
+    quantity = 1,
+    className,
+    appearance = 'primary',
+    sku,
+    variantTitle,
+    disabled = false,
+  } = props
 
   const { cart, addItemToCart, isProductInCart, hasInitializedCart } = useCart()
 
@@ -23,16 +34,17 @@ export const AddToCartButton: React.FC<{
   const router = useRouter()
 
   useEffect(() => {
-    setIsInCart(isProductInCart(product))
-  }, [isProductInCart, product, cart])
+    setIsInCart(isProductInCart(product, sku))
+  }, [isProductInCart, product, cart, sku])
 
   return (
     <Button
       href={isInCart ? '/cart' : undefined}
       type={!isInCart ? 'button' : undefined}
-      label={isInCart ? `✓ View in cart` : `Add to cart`}
+      label={disabled ? 'Out of stock' : isInCart ? `✓ View in cart` : `Add to cart`}
       el={isInCart ? 'link' : undefined}
       appearance={appearance}
+      disabled={disabled}
       className={[
         className,
         classes.addToCartButton,
@@ -42,12 +54,14 @@ export const AddToCartButton: React.FC<{
         .filter(Boolean)
         .join(' ')}
       onClick={
-        !isInCart
+        !isInCart && !disabled
           ? () => {
               addItemToCart({
                 product,
                 quantity,
-              })
+                sku,
+                variantTitle,
+              } as any)
 
               router.push('/cart')
             }

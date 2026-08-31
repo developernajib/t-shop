@@ -1,10 +1,32 @@
-import type { Product } from '../payload-types'
-
-export const product1: Partial<Product> = {
+export const product1: any = {
   title: 'Cotton T-Shirt',
   stripeProductID: '',
   slug: 'cotton-t',
   _status: 'published',
+  enableVariants: true,
+  variants: [
+    {
+      sku: 'TSHIRT-S-WHITE',
+      title: 'Size S / White',
+      size: 's',
+      color: 'White',
+      stock: 15,
+    },
+    {
+      sku: 'TSHIRT-M-BLACK',
+      title: 'Size M / Black',
+      size: 'm',
+      color: 'Black',
+      stock: 20,
+    },
+    {
+      sku: 'TSHIRT-L-NAVY',
+      title: 'Size L / Navy',
+      size: 'l',
+      color: 'Navy',
+      stock: 0,
+    },
+  ],
   meta: {
     title: 'Cotton T-Shirt',
     description: 'Make a one-time purchase for this physical product.',

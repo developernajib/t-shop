@@ -58,16 +58,41 @@ export const createPaymentIntent: PayloadHandler = async (req, res): Promise<voi
       throw new Error('No items in cart')
     }
 
-    // for each item in cart, lookup the product in Stripe and add its price to the total
+    // for each item in cart, validate stock, lookup the product in Stripe and add its price to the total
     await Promise.all(
       fullUser?.cart?.items?.map(async (item: CartItems[0]): Promise<null> => {
         const { product, quantity } = item
+        const itemSku = (item as any)?.sku
 
         if (!quantity) {
           return null
         }
 
-        if (typeof product === 'string' || !product?.stripeProductID) {
+        if (typeof product === 'string' || !product) {
+          throw new Error('Invalid product in cart')
+        }
+
+        // Validate stock on server
+        if (product.enableVariants && Array.isArray(product.variants) && itemSku) {
+          const variant = product.variants.find((v: any) => v.sku === itemSku)
+          if (!variant) {
+            throw new Error(`Variant ${itemSku} not found for ${product.title}`)
+          }
+          const availableStock = typeof variant.stock === 'number' ? variant.stock : 0
+          if (availableStock < quantity) {
+            throw new Error(
+              `Item "${product.title} (${
+                variant.title || itemSku
+              })" is out of stock or requested quantity exceeds available stock (${availableStock}).`,
+            )
+          }
+        } else if (typeof product.stock === 'number' && product.stock < quantity) {
+          throw new Error(
+            `Product "${product.title}" is out of stock or requested quantity exceeds available stock (${product.stock}).`,
+          )
+        }
+
+        if (!product?.stripeProductID) {
           throw new Error('No Stripe Product ID')
         }
 

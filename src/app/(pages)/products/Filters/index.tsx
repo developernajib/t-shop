@@ -10,8 +10,17 @@ import { useFilter } from '../../../_providers/Filter'
 
 import classes from './index.module.scss'
 
-const Filters = ({ categories }: { categories: Category[] }) => {
-  const { categoryFilters, sort, setCategoryFilters, setSort } = useFilter()
+const Filters = ({ categories }: { categories: Category[] | null }) => {
+  const {
+    categoryFilters,
+    sort,
+    priceRange,
+    search,
+    setCategoryFilters,
+    setSort,
+    setPriceRange,
+    setSearch,
+  } = useFilter()
 
   const handleCategories = (categoryId: string) => {
     if (categoryFilters.includes(categoryId)) {
@@ -25,12 +34,39 @@ const Filters = ({ categories }: { categories: Category[] }) => {
 
   const handleSort = (value: string) => setSort(value)
 
+  const handlePriceRange = (min?: number, max?: number) => {
+    if (priceRange.min === min && priceRange.max === max) {
+      setPriceRange({})
+    } else {
+      setPriceRange({ min, max })
+    }
+  }
+
   return (
     <div className={classes.filters}>
       <div>
+        <h6 className={classes.title}>Search</h6>
+        <div style={{ marginTop: '12px' }}>
+          <input
+            type="text"
+            placeholder="Search products..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '10px 14px',
+              borderRadius: '4px',
+              border: '1px solid var(--color-dark-100, #e2e8f0)',
+              backgroundColor: 'var(--color-base-0, #ffffff)',
+              color: 'inherit',
+              fontSize: '14px',
+            }}
+          />
+        </div>
+        <HR className={classes.hr} />
         <h6 className={classes.title}>Product Categories</h6>
         <div className={classes.categories}>
-          {categories.map(category => {
+          {categories?.map(category => {
             const isSelected = categoryFilters.includes(category.id)
 
             return (
@@ -43,6 +79,38 @@ const Filters = ({ categories }: { categories: Category[] }) => {
               />
             )
           })}
+        </div>
+        <HR className={classes.hr} />
+        <h6 className={classes.title}>Filter by Price</h6>
+        <div className={classes.categories}>
+          <RadioButton
+            label="All Prices"
+            value="all"
+            isSelected={!priceRange.min && !priceRange.max}
+            onRadioChange={() => setPriceRange({})}
+            groupName="price"
+          />
+          <RadioButton
+            label="Under $30"
+            value="under-30"
+            isSelected={priceRange.max === 3000 && !priceRange.min}
+            onRadioChange={() => handlePriceRange(undefined, 3000)}
+            groupName="price"
+          />
+          <RadioButton
+            label="$30 - $50"
+            value="30-50"
+            isSelected={priceRange.min === 3000 && priceRange.max === 5000}
+            onRadioChange={() => handlePriceRange(3000, 5000)}
+            groupName="price"
+          />
+          <RadioButton
+            label="Over $50"
+            value="over-50"
+            isSelected={priceRange.min === 5000 && !priceRange.max}
+            onRadioChange={() => handlePriceRange(5000, undefined)}
+            groupName="price"
+          />
         </div>
         <HR className={classes.hr} />
         <h6 className={classes.title}>Sort By</h6>
@@ -58,6 +126,13 @@ const Filters = ({ categories }: { categories: Category[] }) => {
             label="Oldest"
             value="createdAt"
             isSelected={sort === 'createdAt'}
+            onRadioChange={handleSort}
+            groupName="sort"
+          />
+          <RadioButton
+            label="Title A - Z"
+            value="title"
+            isSelected={sort === 'title'}
             onRadioChange={handleSort}
             groupName="sort"
           />

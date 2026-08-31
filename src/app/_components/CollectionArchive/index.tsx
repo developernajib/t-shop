@@ -6,6 +6,7 @@ import qs from 'qs'
 import { Category, Product } from '../../../payload/payload-types'
 import type { ArchiveBlockProps } from '../../_blocks/ArchiveBlock/types'
 import { useFilter } from '../../_providers/Filter'
+import { useDebounce } from '../../_utilities/useDebounce'
 import { Card } from '../Card'
 import { PageRange } from '../PageRange'
 import { Pagination } from '../Pagination'
@@ -36,7 +37,16 @@ export type Props = {
 }
 
 export const CollectionArchive: React.FC<Props> = props => {
-  const { categoryFilters, sort } = useFilter()
+  const {
+    categoryFilters,
+    sort,
+    priceRange,
+    search,
+    setCategoryFilters,
+    setPriceRange,
+    setSearch,
+  } = useFilter()
+  const debouncedSearch = useDebounce(search, 300)
 
   const {
     className,
@@ -46,6 +56,7 @@ export const CollectionArchive: React.FC<Props> = props => {
     limit = 10,
     populatedDocs,
     populatedDocsTotal,
+    categories,
   } = props
 
   const [results, setResults] = useState<Result>({
@@ -104,7 +115,25 @@ export const CollectionArchive: React.FC<Props> = props => {
                 },
               }
             : {}),
+          ...(debouncedSearch && debouncedSearch.trim().length > 0
+            ? {
+                title: {
+                  like: debouncedSearch.trim(),
+                },
+              }
+            : {}),
+          ...(priceRange.min !== undefined || priceRange.max !== undefined
+            ? {
+                price: {
+                  ...(priceRange.min !== undefined ? { greater_than_equal: priceRange.min } : {}),
+                  ...(priceRange.max !== undefined ? { less_than_equal: priceRange.max } : {}),
+                },
+              }
+            : {}),
         },
+        // `price` is a real numeric field (cents) populated from `priceJSON` via
+        // the populatePrice hook, so price filtering runs server-side alongside
+        // category/search. Pagination and counts come straight from the server.
         limit,
         page,
         depth: 1,
@@ -123,12 +152,17 @@ export const CollectionArchive: React.FC<Props> = props => {
 
         const { docs } = json as { docs: Product[] }
 
-        if (docs && Array.isArray(docs)) {
-          setResults(json)
+        if (!docs || !Array.isArray(docs)) {
           setIsLoading(false)
-          if (typeof onResultChange === 'function') {
-            onResultChange(json)
-          }
+          return
+        }
+
+        const nextResult = json as Result
+
+        setResults(nextResult)
+        setIsLoading(false)
+        if (typeof onResultChange === 'function') {
+          onResultChange(nextResult)
         }
       } catch (err) {
         console.warn(err) // eslint-disable-line no-console
@@ -142,13 +176,76 @@ export const CollectionArchive: React.FC<Props> = props => {
     return () => {
       if (timer) clearTimeout(timer)
     }
-  }, [page, categoryFilters, relationTo, onResultChange, sort, limit])
+  }, [page, categoryFilters, relationTo, onResultChange, sort, limit, priceRange, debouncedSearch])
+
+  const hasActiveFilters =
+    categoryFilters.length > 0 ||
+    priceRange.min !== undefined ||
+    priceRange.max !== undefined ||
+    (search && search.trim().length > 0)
+
+  const getPriceLabel = () => {
+    if (priceRange.min === 5000 && !priceRange.max) return 'Over $50'
+    if (priceRange.max === 3000 && !priceRange.min) return 'Under $30'
+    if (priceRange.min === 3000 && priceRange.max === 5000) return '$30 - $50'
+    return 'Price filter'
+  }
 
   return (
     <div className={[classes.collectionArchive, className].filter(Boolean).join(' ')}>
       <div ref={scrollRef} className={classes.scrollRef} />
       {!isLoading && error && <div>{error}</div>}
       <Fragment>
+        {hasActiveFilters && (
+          <div className={classes.activeFilters}>
+            <span className={classes.activeFiltersLabel}>Active:</span>
+            {search && search.trim().length > 0 && (
+              <span className={classes.badge}>
+                "{search}"
+                <button type="button" onClick={() => setSearch('')}>
+                  &times;
+                </button>
+              </span>
+            )}
+            {(priceRange.min !== undefined || priceRange.max !== undefined) && (
+              <span className={classes.badge}>
+                {getPriceLabel()}
+                <button type="button" onClick={() => setPriceRange({})}>
+                  &times;
+                </button>
+              </span>
+            )}
+            {categoryFilters.map(catId => {
+              const matchedCat = categories?.find(c => {
+                return typeof c === 'object' ? c.id === catId : c === catId
+              })
+              const catTitle = typeof matchedCat === 'object' ? matchedCat.title : catId
+              return (
+                <span key={catId} className={classes.badge}>
+                  {catTitle}
+                  <button
+                    type="button"
+                    onClick={() => setCategoryFilters(categoryFilters.filter(id => id !== catId))}
+                  >
+                    &times;
+                  </button>
+                </span>
+              )
+            })}
+            <button
+              type="button"
+              className={classes.clearAllTextBtn}
+              onClick={() => {
+                setCategoryFilters([])
+                setPriceRange({})
+                setSearch('')
+              }}
+            >
+              Clear all
+            </button>
+          </div>
+        )}
+
         {showPageRange !== false && (
           <div className={classes.pageRange}>
             <PageRange
@@ -165,6 +262,22 @@ export const CollectionArchive: React.FC<Props> = props => {
             return <Card key={index} relationTo="products" doc={result} showCategories />
           })}
         </div>
+
+        {!isLoading && (!results.docs || results.docs.length === 0) && (
+          <div className={classes.emptyState}>
+            <p>No products found matching your current filters.</p>
+            <button
+              type="button"
+              onClick={() => {
+                setCategoryFilters([])
+                setPriceRange({})
+                setSearch('')
+              }}
+            >
+              Clear all filters
+            </button>
+          </div>
+        )}
 
         {results.totalPages > 1 && (
           <Pagination

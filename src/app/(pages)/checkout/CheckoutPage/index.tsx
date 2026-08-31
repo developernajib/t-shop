@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation'
 import { Settings } from '../../../../payload/payload-types'
 import { Button } from '../../../_components/Button'
 import { LoadingShimmer } from '../../../_components/LoadingShimmer'
+import { priceFromJSON } from '../../../_components/Price'
 import { useAuth } from '../../../_providers/Auth'
 import { useCart } from '../../../_providers/Cart'
 import { useTheme } from '../../../_providers/Theme'
@@ -31,7 +32,45 @@ export const CheckoutPage: React.FC<{
   const { user } = useAuth()
   const router = useRouter()
   const [error, setError] = React.useState<string | null>(null)
-  const [clientSecret, setClientSecret] = React.useState()
+  const [clientSecret, setClientSecret] = React.useState<string | null>(null)
+  const [isTestSubmitting, setIsTestSubmitting] = React.useState(false)
+
+  const handleTestCheckout = async () => {
+    setIsTestSubmitting(true)
+    try {
+      const orderReq = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/orders`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          total: cartTotal.raw,
+          stripePaymentIntentID: `test_mock_${Date.now()}`,
+          items: (cart?.items || [])?.map(({ product, quantity, sku, variantTitle }: any) => ({
+            product: typeof product === 'string' ? product : product.id,
+            quantity,
+            sku,
+            variantTitle,
+            price:
+              typeof product === 'object'
+                ? Number(priceFromJSON(product.priceJSON, 1, true))
+                : undefined,
+          })),
+        }),
+      })
+
+      if (!orderReq.ok) throw new Error(orderReq.statusText || 'Something went wrong.')
+
+      const { doc, error: errorFromRes }: { doc: any; error?: string } = await orderReq.json()
+      if (errorFromRes) throw new Error(errorFromRes)
+
+      router.push(`/order-confirmation?order_id=${doc.id}`)
+    } catch (err: any) {
+      setError(err?.message || 'Error placing test order')
+      setIsTestSubmitting(false)
+    }
+  }
   const hasMadePaymentIntent = React.useRef(false)
   const { theme } = useTheme()
 
@@ -123,6 +162,8 @@ export const CheckoutPage: React.FC<{
                       metaImage={metaImage}
                       quantity={quantity}
                       index={index}
+                      sku={(item as any)?.sku}
+                      variantTitle={(item as any)?.variantTitle}
                     />
                   </Fragment>
                 )
@@ -143,8 +184,16 @@ export const CheckoutPage: React.FC<{
       )}
       {!clientSecret && error && (
         <div className={classes.error}>
-          <p>{`Error: ${error}`}</p>
-          <Button label="Back to cart" href="/cart" appearance="secondary" />
+          <p>{`Stripe not configured or failed (${error}). You can place a test order below:`}</p>
+          <div style={{ display: 'flex', gap: '16px', marginTop: '16px' }}>
+            <Button label="Back to cart" href="/cart" appearance="secondary" />
+            <Button
+              label={isTestSubmitting ? 'Placing Order...' : 'Place Test Order (Mock/COD)'}
+              appearance="primary"
+              onClick={handleTestCheckout}
+              disabled={isTestSubmitting}
+            />
+          </div>
         </div>
       )}
       {clientSecret && (

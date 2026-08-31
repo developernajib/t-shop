@@ -28,7 +28,27 @@ const Users: CollectionConfig = {
     beforeChange: [createStripeCustomer],
     afterChange: [loginAfterCreate],
   },
-  auth: true,
+  auth: {
+    forgotPassword: {
+      // Mitigation for CVE-2026-34751 / GHSA-hp5w-3hxx-vmwf (pre-auth account
+      // takeover via parameter injection in password recovery). Build the
+      // reset URL strictly from a server-side base URL + the Payload-issued
+      // token, never from request-controlled input. This is a partial
+      // compensating control only — the complete fix is upgrading to
+      // payload >= 3.79.1.
+      generateEmailHTML: (args?: { token?: string }) => {
+        const token = args?.token || ''
+        const serverURL = process.env.PAYLOAD_PUBLIC_SERVER_URL || ''
+        const resetURL = `${serverURL}/reset-password?token=${encodeURIComponent(token)}`
+
+        return `
+          <p>You are receiving this because you (or someone else) requested a password reset for your account.</p>
+          <p>Click the link below to reset your password. If you did not request this, you can safely ignore this email.</p>
+          <p><a href="${resetURL}">Reset your password</a></p>
+        `
+      },
+    },
+  },
   endpoints: [
     {
       path: '/:teamID/customer',
@@ -109,6 +129,16 @@ const Users: CollectionConfig = {
               name: 'product',
               type: 'relationship',
               relationTo: 'products',
+            },
+            {
+              name: 'sku',
+              label: 'Variant SKU',
+              type: 'text',
+            },
+            {
+              name: 'variantTitle',
+              label: 'Variant Name',
+              type: 'text',
             },
             {
               name: 'quantity',

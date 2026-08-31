@@ -7,20 +7,30 @@ interface IContextType {
   setCategoryFilters: React.Dispatch<SetStateAction<string[]>>
   sort: string
   setSort: React.Dispatch<SetStateAction<string>>
+  priceRange: { min?: number; max?: number }
+  setPriceRange: React.Dispatch<SetStateAction<{ min?: number; max?: number }>>
+  search: string
+  setSearch: React.Dispatch<SetStateAction<string>>
 }
 
-export const INITIAL_FILTER_DATA = {
+export const INITIAL_FILTER_DATA: IContextType = {
   categoryFilters: [],
   setCategoryFilters: () => [],
   sort: '',
   setSort: () => '',
+  priceRange: {},
+  setPriceRange: () => ({}),
+  search: '',
+  setSearch: () => '',
 }
 
 const FilterContext = createContext<IContextType>(INITIAL_FILTER_DATA)
 
 export const FilterProvider = ({ children }: { children: React.ReactNode }) => {
-  const [categoryFilters, setCategoryFilters] = useState([])
-  const [sort, setSort] = useState('-createdAt')
+  const [categoryFilters, setCategoryFilters] = useState<string[]>([])
+  const [sort, setSort] = useState<string>('-createdAt')
+  const [priceRange, setPriceRange] = useState<{ min?: number; max?: number }>({})
+  const [search, setSearch] = useState<string>('')
 
   return (
     <FilterContext.Provider
@@ -29,6 +39,10 @@ export const FilterProvider = ({ children }: { children: React.ReactNode }) => {
         setCategoryFilters,
         sort,
         setSort,
+        priceRange,
+        setPriceRange,
+        search,
+        setSearch,
       }}
     >
       {children}

@@ -1,8 +1,13 @@
-import type { CartItems, Product, User } from '../../../payload/payload-types'
+import type { CartItems, Product } from '../../../payload/payload-types'
 
-export type CartItem = CartItems[0]
+export type CartItem = CartItems[0] & {
+  sku?: string
+  variantTitle?: string
+}
 
-type CartType = User['cart']
+interface CartType {
+  items?: CartItem[]
+}
 
 type CartAction =
   | {
@@ -19,7 +24,7 @@ type CartAction =
     }
   | {
       type: 'DELETE_ITEM'
-      payload: Product
+      payload: { product: Product; sku?: string } | Product
     }
   | {
       type: 'CLEAR_CART'
@@ -38,18 +43,19 @@ export const cartReducer = (cart: CartType, action: CartAction): CartType => {
         ...(cart?.items || []),
         ...(incomingCart?.items || []),
       ].reduce((acc: CartItem[], item) => {
-        // remove duplicates
         const productId = typeof item.product === 'string' ? item.product : item?.product?.id
+        const itemSku = (item as any)?.sku || ''
 
-        const indexInAcc = acc.findIndex(({ product }) =>
-          typeof product === 'string' ? product === productId : product?.id === productId,
-        ) // eslint-disable-line function-paren-newline
+        const indexInAcc = acc.findIndex(accItem => {
+          const accProductId =
+            typeof accItem.product === 'string' ? accItem.product : accItem?.product?.id
+          const accSku = (accItem as any)?.sku || ''
+          return accProductId === productId && accSku === itemSku
+        })
 
         if (indexInAcc > -1) {
           acc[indexInAcc] = {
             ...acc[indexInAcc],
-            // customize the merge logic here, e.g.:
-            // quantity: acc[indexInAcc].quantity + item.quantity
           }
         } else {
           acc.push(item)
@@ -64,22 +70,22 @@ export const cartReducer = (cart: CartType, action: CartAction): CartType => {
     }
 
     case 'ADD_ITEM': {
-      // if the item is already in the cart, increase the quantity
       const { payload: incomingItem } = action
       const productId =
         typeof incomingItem.product === 'string' ? incomingItem.product : incomingItem?.product?.id
+      const incomingSku = (incomingItem as any)?.sku || ''
 
-      const indexInCart = cart?.items?.findIndex(({ product }) =>
-        typeof product === 'string' ? product === productId : product?.id === productId,
-      ) // eslint-disable-line function-paren-newline
+      const indexInCart = cart?.items?.findIndex(item => {
+        const itemProductId = typeof item.product === 'string' ? item.product : item?.product?.id
+        const itemSku = (item as any)?.sku || ''
+        return itemProductId === productId && itemSku === incomingSku
+      })
 
       let withAddedItem = [...(cart?.items || [])]
 
       if (indexInCart === -1) {
         withAddedItem.push(incomingItem)
-      }
-
-      if (typeof indexInCart === 'number' && indexInCart > -1) {
+      } else if (typeof indexInCart === 'number' && indexInCart > -1) {
         withAddedItem[indexInCart] = {
           ...withAddedItem[indexInCart],
           quantity: (incomingItem.quantity || 0) > 0 ? incomingItem.quantity : undefined,
@@ -93,17 +99,26 @@ export const cartReducer = (cart: CartType, action: CartAction): CartType => {
     }
 
     case 'DELETE_ITEM': {
-      const { payload: incomingProduct } = action
+      const { payload } = action
+      const incomingProduct = (payload as any)?.id
+        ? (payload as Product)
+        : (payload as any)?.product
+      const incomingSku = (payload as any)?.sku
       const withDeletedItem = { ...cart }
 
-      const indexInCart = cart?.items?.findIndex(({ product }) =>
-        typeof product === 'string'
-          ? product === incomingProduct.id
-          : product?.id === incomingProduct.id,
-      ) // eslint-disable-line function-paren-newline
+      const indexInCart = cart?.items?.findIndex(item => {
+        const itemProductId = typeof item.product === 'string' ? item.product : item?.product?.id
+        const matchProduct = itemProductId === incomingProduct?.id
+        if (!matchProduct) return false
+        if (incomingSku !== undefined) {
+          return (item as any)?.sku === incomingSku
+        }
+        return true
+      })
 
-      if (typeof indexInCart === 'number' && withDeletedItem.items && indexInCart > -1)
+      if (typeof indexInCart === 'number' && withDeletedItem.items && indexInCart > -1) {
         withDeletedItem.items.splice(indexInCart, 1)
+      }
 
       return withDeletedItem
     }

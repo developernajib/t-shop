@@ -228,5 +228,26 @@ export const seed = async (payload: Payload): Promise<void> => {
     },
   })
 
+  payload.logger.info(`— Seeding footer...`)
+
+  await payload.updateGlobal({
+    slug: 'footer',
+    data: {
+      copyright: 'Copyright © 2026 T-Shop. All rights reserved.',
+      navItems: [
+        {
+          link: {
+            type: 'reference',
+            reference: {
+              relationTo: 'pages',
+              value: productsPageDoc.id,
+            },
+            label: 'Shop',
+          },
+        },
+      ],
+    },
+  })
+
   payload.logger.info('Seeded database successfully!')
 }
