@@ -56,6 +56,7 @@ export const CollectionArchive: React.FC<Props> = props => {
     limit = 10,
     populatedDocs,
     populatedDocsTotal,
+    categories,
   } = props
 
   const [results, setResults] = useState<Result>({
@@ -121,7 +122,18 @@ export const CollectionArchive: React.FC<Props> = props => {
                 },
               }
             : {}),
+          ...(priceRange.min !== undefined || priceRange.max !== undefined
+            ? {
+                price: {
+                  ...(priceRange.min !== undefined ? { greater_than_equal: priceRange.min } : {}),
+                  ...(priceRange.max !== undefined ? { less_than_equal: priceRange.max } : {}),
+                },
+              }
+            : {}),
         },
+        // `price` is a real numeric field (cents) populated from `priceJSON` via
+        // the populatePrice hook, so price filtering runs server-side alongside
+        // category/search. Pagination and counts come straight from the server.
         limit,
         page,
         depth: 1,
@@ -138,40 +150,19 @@ export const CollectionArchive: React.FC<Props> = props => {
         clearTimeout(timer)
         hasHydrated.current = true
 
-        let { docs } = json as { docs: Product[] }
+        const { docs } = json as { docs: Product[] }
 
-        if (docs && Array.isArray(docs)) {
-          if (priceRange.min !== undefined || priceRange.max !== undefined) {
-            docs = docs.filter(doc => {
-              try {
-                let amount = (doc as any)?.price
-                if (typeof amount !== 'number') {
-                  const parsed = JSON.parse(doc.priceJSON || '{}')?.data?.[0]
-                  amount = parsed?.unit_amount
-                }
-                if (typeof amount !== 'number') return true
-                if (priceRange.min !== undefined && amount < priceRange.min) return false
-                if (priceRange.max !== undefined && amount > priceRange.max) return false
-                return true
-              } catch {
-                return true
-              }
-            })
-          }
-
-          setResults({
-            ...json,
-            docs,
-            totalDocs: docs.length,
-          })
+        if (!docs || !Array.isArray(docs)) {
           setIsLoading(false)
-          if (typeof onResultChange === 'function') {
-            onResultChange({
-              ...json,
-              docs,
-              totalDocs: docs.length,
-            })
-          }
+          return
+        }
+
+        const nextResult = json as Result
+
+        setResults(nextResult)
+        setIsLoading(false)
+        if (typeof onResultChange === 'function') {
+          onResultChange(nextResult)
         }
       } catch (err) {
         console.warn(err) // eslint-disable-line no-console
@@ -225,7 +216,9 @@ export const CollectionArchive: React.FC<Props> = props => {
               </span>
             )}
             {categoryFilters.map(catId => {
-              const matchedCat = categories?.find(c => (typeof c === 'object' ? c.id === catId : c === catId))
+              const matchedCat = categories?.find(c => {
+                return typeof c === 'object' ? c.id === catId : c === catId
+              })
               const catTitle = typeof matchedCat === 'object' ? matchedCat.title : catId
               return (
                 <span key={catId} className={classes.badge}>
