@@ -124,13 +124,13 @@ export default async function Order({ params: { id } }) {
                     )}
                     <p>{`Quantity: ${quantity}`}</p>
                     {(item as any)?.price ? (
-                      <p>{`Price: ${(
-                        ((item as any).price * quantity) /
-                        100
-                      ).toLocaleString('en-US', {
-                        style: 'currency',
-                        currency: 'USD',
-                      })}`}</p>
+                      <p>{`Price: ${(((item as any).price * quantity) / 100).toLocaleString(
+                        'en-US',
+                        {
+                          style: 'currency',
+                          currency: 'USD',
+                        },
+                      )}`}</p>
                     ) : (
                       <Price product={product} button={false} quantity={quantity} />
                     )}
