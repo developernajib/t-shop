@@ -32,10 +32,10 @@ export const CheckoutPage: React.FC<{
   const { user } = useAuth()
   const router = useRouter()
   const [error, setError] = React.useState<string | null>(null)
+  const [clientSecret, setClientSecret] = React.useState<string | null>(null)
   const [isTestSubmitting, setIsTestSubmitting] = React.useState(false)
 
-  const handleTestCheckout = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleTestCheckout = async () => {
     setIsTestSubmitting(true)
     try {
       const orderReq = await fetch(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/orders`, {
