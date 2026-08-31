@@ -54,14 +54,35 @@ export const CheckoutForm: React.FC<{}> = () => {
               body: JSON.stringify({
                 total: cartTotal.raw,
                 stripePaymentIntentID: paymentIntent.id,
-                items: (cart?.items || [])?.map(({ product, quantity }) => ({
-                  product: typeof product === 'string' ? product : product.id,
-                  quantity,
-                  price:
-                    typeof product === 'object'
-                      ? priceFromJSON(product.priceJSON, 1, true)
-                      : undefined,
-                })),
+                items: (cart?.items || [])?.map(item => {
+                  const { product, quantity, sku, variantTitle } = item as any
+                  let itemPrice: number | undefined = undefined
+
+                  if (typeof product === 'object' && product) {
+                    if (product.enableVariants && Array.isArray(product.variants) && sku) {
+                      const variant = product.variants.find((v: any) => v.sku === sku)
+                      if (typeof variant?.price === 'number') {
+                        itemPrice = variant.price
+                      }
+                    }
+
+                    if (itemPrice === undefined) {
+                      if (typeof product.price === 'number') {
+                        itemPrice = product.price
+                      } else {
+                        itemPrice = priceFromJSON(product.priceJSON, 1, true)
+                      }
+                    }
+                  }
+
+                  return {
+                    product: typeof product === 'string' ? product : product?.id,
+                    quantity,
+                    sku: sku || undefined,
+                    variantTitle: variantTitle || undefined,
+                    price: itemPrice,
+                  }
+                }),
               }),
             })
 

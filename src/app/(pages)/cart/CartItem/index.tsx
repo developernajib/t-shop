@@ -16,7 +16,7 @@ const CartItem = ({ product, title, metaImage, qty, addItemToCart, sku, variantT
   const variantObj = (product as any)?.enableVariants
     ? (product as any)?.variants?.find((v: any) => v.sku === sku)
     : null
-  const maxStock = variantObj ? (variantObj.stock ?? 0) : ((product as any)?.stock ?? 999)
+  const maxStock = variantObj ? variantObj.stock ?? 0 : (product as any)?.stock ?? 999
 
   const decrementQty = () => {
     const updatedQty = quantity > 1 ? quantity - 1 : 1
@@ -60,7 +60,14 @@ const CartItem = ({ product, title, metaImage, qty, addItemToCart, sku, variantT
             </p>
           )}
           {maxStock < 10 && (
-            <p style={{ fontSize: '12px', color: maxStock > 0 ? 'var(--color-warning-500, #e67e22)' : 'var(--color-error-500)', marginTop: '2px' }}>
+            <p
+              style={{
+                fontSize: '12px',
+                color:
+                  maxStock > 0 ? 'var(--color-warning-500, #e67e22)' : 'var(--color-error-500)',
+                marginTop: '2px',
+              }}
+            >
               {maxStock > 0 ? `Only ${maxStock} left in stock` : 'Out of stock'}
             </p>
           )}
@@ -90,7 +97,10 @@ const CartItem = ({ product, title, metaImage, qty, addItemToCart, sku, variantT
               .filter(Boolean)
               .join(' ')}
             onClick={incrementQty}
-            style={{ opacity: quantity >= maxStock ? 0.3 : 1, cursor: quantity >= maxStock ? 'not-allowed' : 'pointer' }}
+            style={{
+              opacity: quantity >= maxStock ? 0.3 : 1,
+              cursor: quantity >= maxStock ? 'not-allowed' : 'pointer',
+            }}
           >
             <Image
               src="/assets/icons/plus.svg"

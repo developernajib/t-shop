@@ -13,7 +13,7 @@ export const Orders: CollectionConfig = {
   slug: 'orders',
   admin: {
     useAsTitle: 'createdAt',
-    defaultColumns: ['createdAt', 'orderedBy'],
+    defaultColumns: ['createdAt', 'orderedBy', 'total', 'items'],
     preview: doc => `${process.env.PAYLOAD_PUBLIC_SERVER_URL}/orders/${doc.id}`,
   },
   hooks: {

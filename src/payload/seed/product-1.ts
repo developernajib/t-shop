@@ -1,5 +1,3 @@
-import type { Product } from '../payload-types'
-
 export const product1: any = {
   title: 'Cotton T-Shirt',
   stripeProductID: '',

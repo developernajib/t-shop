@@ -6,8 +6,21 @@ export const CART = `cart {
       id
       slug
       priceJSON
+      price
+      enableVariants
+      stock
+      variants {
+        sku
+        title
+        size
+        color
+        price
+        stock
+      }
       ${META}
     }
+    sku
+    variantTitle
     quantity
   }
 }`

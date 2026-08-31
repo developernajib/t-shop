@@ -143,4 +143,3 @@ const Filters = ({ categories }: { categories: Category[] | null }) => {
 }
 
 export default Filters
-

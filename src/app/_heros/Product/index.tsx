@@ -20,9 +20,7 @@ export const ProductHero: React.FC<{
   const [selectedVariantIndex, setSelectedVariantIndex] = useState<number>(0)
 
   const currentVariant = hasVariants ? variants[selectedVariantIndex] : null
-  const currentStock = hasVariants
-    ? currentVariant?.stock ?? 0
-    : ((product as any)?.stock ?? 10)
+  const currentStock = hasVariants ? currentVariant?.stock ?? 0 : (product as any)?.stock ?? 10
   const isAvailable = currentStock > 0
 
   return (

@@ -1,11 +1,11 @@
-import type { CartItems, Product, User } from '../../../payload/payload-types'
+import type { CartItems, Product } from '../../../payload/payload-types'
 
 export type CartItem = CartItems[0] & {
   sku?: string
   variantTitle?: string
 }
 
-type CartType = {
+interface CartType {
   items?: CartItem[]
 }
 
@@ -76,8 +76,7 @@ export const cartReducer = (cart: CartType, action: CartAction): CartType => {
       const incomingSku = (incomingItem as any)?.sku || ''
 
       const indexInCart = cart?.items?.findIndex(item => {
-        const itemProductId =
-          typeof item.product === 'string' ? item.product : item?.product?.id
+        const itemProductId = typeof item.product === 'string' ? item.product : item?.product?.id
         const itemSku = (item as any)?.sku || ''
         return itemProductId === productId && itemSku === incomingSku
       })
@@ -101,13 +100,14 @@ export const cartReducer = (cart: CartType, action: CartAction): CartType => {
 
     case 'DELETE_ITEM': {
       const { payload } = action
-      const incomingProduct = (payload as any)?.id ? (payload as Product) : (payload as any)?.product
+      const incomingProduct = (payload as any)?.id
+        ? (payload as Product)
+        : (payload as any)?.product
       const incomingSku = (payload as any)?.sku
       const withDeletedItem = { ...cart }
 
       const indexInCart = cart?.items?.findIndex(item => {
-        const itemProductId =
-          typeof item.product === 'string' ? item.product : item?.product?.id
+        const itemProductId = typeof item.product === 'string' ? item.product : item?.product?.id
         const matchProduct = itemProductId === incomingProduct?.id
         if (!matchProduct) return false
         if (incomingSku !== undefined) {

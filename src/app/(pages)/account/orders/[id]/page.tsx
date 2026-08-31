@@ -105,8 +105,16 @@ export default async function Order({ params: { id } }) {
                       </Link>
                     </h6>
                     {(item as any)?.variantTitle && (
-                      <p style={{ fontSize: '14px', color: 'var(--color-dark-500)', marginTop: '-4px', marginBottom: '8px' }}>
-                        Option: {(item as any)?.variantTitle} {(item as any)?.sku ? `(${(item as any)?.sku})` : ''}
+                      <p
+                        style={{
+                          fontSize: '14px',
+                          color: 'var(--color-dark-500)',
+                          marginTop: '-4px',
+                          marginBottom: '8px',
+                        }}
+                      >
+                        Option: {(item as any)?.variantTitle}{' '}
+                        {(item as any)?.sku ? `(${(item as any)?.sku})` : ''}
                       </p>
                     )}
                     <p>{`Quantity: ${quantity}`}</p>

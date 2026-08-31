@@ -16,10 +16,14 @@ export const ORDER = `
       docs {
         id
         orderedBy
+        total
+        createdAt
         items {
           product ${PRODUCT}
-          title
-          priceJSON
+          sku
+          variantTitle
+          price
+          quantity
         }
       }
     }

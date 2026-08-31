@@ -49,8 +49,9 @@ export const updateProductStock: AfterChangeHook<Order> = async ({ doc, req, ope
             },
           })
         }
-      } catch (err) {
-        payload.logger.error(`Failed to update stock for product ${productId}: ${err}`)
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err)
+        payload.logger.error(`Failed to update stock for product ${productId}: ${message}`)
       }
     }
   }
